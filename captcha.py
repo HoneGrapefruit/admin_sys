@@ -205,5 +205,5 @@ def random_code(length=4):
 if __name__ == '__main__':
     captcha = Captcha.instance()
     image_data = captcha.generate(random_code())
-    with open('resources/captcha.png', 'wb') as file:
+    with open('captcha.png', 'wb') as file:
         file.write(image_data)
