@@ -1,7 +1,8 @@
 """
 main.py - 主程序（项目入口）
 
-Author: Hao
+路由 ---> 视图（view）函数
+
 Date: 2021/9/9
 """
 import functools
@@ -14,24 +15,19 @@ from flask import redirect, session, request, make_response
 from flask_cors import CORS
 
 import captcha
-from utils import random_captcha_code, get_mysql_connection
+from api import bp
+from utils import random_captcha_code, get_mysql_connection, random_secret_key, check_login
 
 app = flask.Flask(__name__)
-app.secret_key = '1Qaz2Wsx'
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=1800)
 CORS(app)
 
+# 注册蓝图
+app.register_blueprint(bp)
 
-def check_login(func):
-
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        user_id = session.get('user_id')
-        if not user_id:
-            return redirect('/static/lyear_pages_login.html')
-        return func(*args, **kwargs)
-
-    return wrapper
+# app.config['SECRET_KEY'] = random_secret_key()
+app.secret_key = random_secret_key()
+# app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+app.permanent_session_lifetime = timedelta(days=7)
 
 
 @app.route('/')
@@ -73,6 +69,7 @@ def login():
         conn.close()
     if user_dict is None:
         return {'code': 10002, 'message': '用户名或密码错误'}
+    # 更好的做法是在用户浏览器中保存一个身份令牌（token） ---> JWT（JSON Web Token）
     session['user_id'] = user_dict['user_id']
     session.permanent = True
     nickname, avatar = user_dict['nickname'], user_dict['avatar']
@@ -82,7 +79,7 @@ def login():
 @app.route('/logout')
 @check_login
 def logout():
-    session.pop('user_id')
+    session.clear()
     return {'code': 10003, 'message': '退出登录'}
 
 

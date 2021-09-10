@@ -1,7 +1,6 @@
 """
 captcha - 验证码
 
-Author: Hao
 Date: 2021/8/24
 """
 import os
