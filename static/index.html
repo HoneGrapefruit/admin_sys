@@ -31,9 +31,11 @@
       <div class="lyear-layout-sidebar-scroll">
         <nav class="sidebar-main">
           <ul class="nav nav-drawer">
-            <li class="nav-item active"> <a href="index.html"><i class="mdi mdi-home"></i> 后台首页</a> </li>
+            <li class="nav-item active">
+              <a href="index.html"><i class="mdi mdi-home"></i>后台首页</a>
+            </li>
             <li class="nav-item nav-item-has-subnav">
-              <a href="javascript:void(0)"><i class="mdi mdi-palette"></i> UI 元素</a>
+              <a href="javascript:void(0)"><i class="mdi mdi-palette"></i>用户数据</a>
               <ul class="nav nav-subnav">
                 <li> <a href="lyear_ui_buttons.html">按钮</a> </li>
                 <li> <a href="lyear_ui_cards.html">卡片</a> </li>
@@ -52,7 +54,7 @@
               </ul>
             </li>
             <li class="nav-item nav-item-has-subnav">
-              <a href="javascript:void(0)"><i class="mdi mdi-format-align-justify"></i> 表单</a>
+              <a href="javascript:void(0)"><i class="mdi mdi-format-align-justify"></i>订单数据</a>
               <ul class="nav nav-subnav">
                 <li> <a href="lyear_forms_elements.html">基本元素</a> </li>
                 <li> <a href="lyear_forms_radio.html">单选框</a> </li>
@@ -61,7 +63,7 @@
               </ul>
             </li>
             <li class="nav-item nav-item-has-subnav">
-              <a href="javascript:void(0)"><i class="mdi mdi-file-outline"></i> 示例页面</a>
+              <a href="javascript:void(0)"><i class="mdi mdi-file-outline"></i>平台数据</a>
               <ul class="nav nav-subnav">
                 <li> <a href="lyear_pages_doc.html">文档列表</a> </li>
                 <li> <a href="lyear_pages_gallery.html">图库列表</a> </li>
@@ -77,7 +79,7 @@
               </ul>
             </li>
             <li class="nav-item nav-item-has-subnav">
-              <a href="javascript:void(0)"><i class="mdi mdi-language-javascript"></i> JS 插件</a>
+              <a href="javascript:void(0)"><i class="mdi mdi-language-javascript"></i>系统设置</a>
               <ul class="nav nav-subnav">
                 <li> <a href="lyear_js_datepicker.html">日期选取器</a> </li>
                 <li> <a href="lyear_js_sliders.html">滑块</a> </li>
@@ -89,7 +91,7 @@
               </ul>
             </li>
             <li class="nav-item nav-item-has-subnav">
-              <a href="javascript:void(0)"><i class="mdi mdi-menu"></i> 多级菜单</a>
+              <a href="javascript:void(0)"><i class="mdi mdi-menu"></i>其他功能</a>
               <ul class="nav nav-subnav">
                 <li> <a href="#!">一级菜单</a> </li>
                 <li class="nav-item nav-item-has-subnav">
@@ -344,6 +346,12 @@
                       </tr>
                     </tbody>
                   </table>
+                  <nav>
+                    <ul class="pager">
+                      <li><a href="#" @click.prevent="prevPage()">上一页</a></li>
+                      <li><a href="#" @click.prevent="nextPage()">下一页</a></li>
+                    </ul>
+                  </nav>
                 </div>
               </div>
               <div class="card-footer">
@@ -370,7 +378,6 @@
 <script type="text/javascript" src="js/main.min.js"></script>
 <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.14/vue.min.js"></script>
 <script>
-//渲染头像
   let app = new Vue({
     el: '#header',
     data: {
@@ -397,7 +404,11 @@
     data: {
       items: [],
       classNames: ['bg-primary', 'bg-danger', 'bg-success', 'bg-purple'],
-      stocks: []
+      stocks: [],
+      // 设置表格数据分页
+      currentPage: 1,
+      pageSize: 10,
+      totalPage: 0
     },
     created() {
       fetch('/api/general_data', {
@@ -405,14 +416,30 @@
       }).then(resp => resp.json()).then(json => {
         this.items = json.results
       })
-      //从接口获取股票数据(表格数据)
-      fetch('/api/stock_data', {
-        credentials: 'include'
-      }).then(resp => resp.json()).then(json => {
-        this.stocks = json.results
-      })
+
+      this.loadStockData()
     },
     methods: {
+      loadStockData() {
+        fetch(`/api/stock_data?page=${this.currentPage}&size=${this.pageSize}`, {
+          credentials: 'include'
+        }).then(resp => resp.json()).then(json => {
+          this.stocks = json.results
+          this.totalPage = json.total_page
+        })
+      },
+      prevPage() {
+        if (this.currentPage > 1) {
+          this.currentPage -= 1
+          this.loadStockData()
+        }
+      },
+      nextPage() {
+        if (this.currentPage < this.totalPage) {
+          this.currentPage += 1
+          this.loadStockData()
+        }
+      },
       exportExcel() {
         location.href = '/export'
       }

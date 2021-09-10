@@ -1,8 +1,3 @@
-"""
-api - API 接口
-
-Date: 2021/9/10
-"""
 import random
 
 import pymysql
@@ -85,10 +80,12 @@ def get_sales_data():
     return {'y1': y1_data, 'y2': y2_data, 'y3': y3_data, 'y4': y4_data}
 
 
-# 获取股票数据
+# 表格数据分页查询
 @bp.route('/stock_data')
 @check_login
 def get_stock_data():
+    page = int(request.args.get('page', '1'))
+    size = int(request.args.get('size', '10'))
     start = request.args.get('start', '2020-1-1')
     end = request.args.get('end', '2020-12-31')
     conn = get_mysql_connection(database='alibaba')
@@ -96,8 +93,8 @@ def get_stock_data():
         with conn.cursor(pymysql.cursors.DictCursor) as cursor:
             cursor.execute(
                 'select trade_date, open_price, close_price, low_price, high_price, trade_volume '
-                'from tb_baba_stock where trade_date between %s and %s limit 10',
-                (start, end)
+                'from tb_baba_stock where trade_date between %s and %s limit %s offset %s',
+                (start, end, size, (page - 1) * size)
             )
             results = [{
                 'date': row['trade_date'].strftime('%Y-%m-%d'),
@@ -107,6 +104,11 @@ def get_stock_data():
                 'high': f'{float(row["high_price"]):.2f}',
                 'volume':  row['trade_volume']
             } for row in cursor.fetchall()]
+            cursor.execute(
+                'select count(*) as total from tb_baba_stock where trade_date between %s and %s',
+                (start, end)
+            )
+            total = cursor.fetchone()['total']
     finally:
         conn.close()
-    return {'results': results}
+    return {'results': results, 'total_page': (total - 1) // size + 1}
